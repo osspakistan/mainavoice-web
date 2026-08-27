@@ -14,7 +14,7 @@
     "check": "pnpm lint:fix && pnpm lint && pnpm typecheck",
     "preview": "vite preview",
     "shadcn": "pnpm dlx shadcn-vue@latest add",
-    "deploy": "pnpm check && pnpm build && wrangler pages deploy dist --project-name=mainavoice"
+    "deploy": "pnpm check && pnpm build && wrangler pages deploy dist --project-name=mainavoice-web"
   },
   "dependencies": {
     "@lucide/vue": "^1.31.0",
