@@ -114,6 +114,11 @@ const CONTACT_HTML = `
       transcription provider, make sure you include the model name, provider and a description of
       what went wrong.
     </p>
+    <p class="text-sm text-muted-foreground leading-relaxed">
+      Maina Voice is maintained by Awais Alwaisy as an open-source project. You can follow development,
+      review the changelog and contribute on GitHub at
+      <a href="https://github.com/alwaisy/mainavoice-web" target="_blank" rel="noopener noreferrer">alwaisy/mainavoice-web</a>.
+    </p>
   </div>
 </div>
 `
@@ -173,6 +178,9 @@ export async function onRequest(context) {
   // Inject static, route-specific HTML for trust-anchor pages so non-JS crawlers see real content.
   const page = PAGES[base]
   if (page) {
+    // Remove the generic no-JS fallback so the route-specific content is the only page copy,
+    // while keeping the <noscript> style that hides the boot splash for users without JS.
+    html = html.replace(/<noscript>\s*<main class="no-js-fallback"[^>]*>[\s\S]*?<\/main>\s*<\/noscript>/i, '')
     html = html
       .replace(/<title>[^<]*<\/title>/, `<title>${page.title}</title>`)
       .replace(/<meta name="description" content="[^"]*"[^>]*>/, `<meta name="description" content="${page.description}" />`)

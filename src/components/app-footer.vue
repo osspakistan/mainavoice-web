@@ -48,6 +48,15 @@ const NEW_FEATURE_URL = 'https://github.com/alwaisy/mainavoice-web/issues/new?la
 
         <span class="text-border hidden sm:inline">·</span>
 
+        <RouterLink
+          to="/contact"
+          class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
+        >
+          Contact
+        </RouterLink>
+
+        <span class="text-border hidden sm:inline">·</span>
+
         <a href="/llms.txt" class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition">
           <FileText class="w-3 h-3" />
           llms.txt

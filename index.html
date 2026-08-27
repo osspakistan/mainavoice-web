@@ -4,13 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>Maina Voice — Speech to Text &amp; Model Benchmarking</title>
-    
+
     <!-- Core SEO & Primary Metadata -->
     <meta name="description" content="Speech to text dictation and multi-engine speed benchmarking. Compare OpenAI GPT-Transcribe, Deepgram Nova-3, NVIDIA Parakeet, and Fish Audio with local IndexedDB privacy." />
     <meta name="keywords" content="AI voice transcription, speech to text, AI engine benchmarking, OpenRouter voice API, Deepgram Nova-3, OpenAI GPT-Transcribe, NVIDIA Parakeet, local-first audio dictation, speech recognition benchmark" />
     <meta name="author" content="Maina Voice Team" />
+    <meta name="application-name" content="Maina Voice" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://mainavoice.lat/" />
+    <link rel="home" href="https://mainavoice.lat/" />
 
     <!-- PWA & Adaptive Mobile Icons -->
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -52,11 +54,24 @@
       body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.01em;overflow-x:hidden}
       #boot-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);color:var(--fg);text-align:center;padding:1.5rem}
       #boot-splash .bs-box{width:5rem;height:5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--bd);margin-bottom:1.5rem}
-      #boot-splash h1{font-size:1.875rem;font-weight:700;letter-spacing:-.025em;margin:0 0 .375rem}
-      #boot-splash p{font-size:.875rem;font-weight:500;color:var(--mut);margin:0}
-      #boot-splash h2{font-size:.875rem;font-weight:500;color:var(--mut);margin:0;line-height:inherit}
+      #boot-splash .bs-title{font-size:1.875rem;font-weight:700;letter-spacing:-.025em;margin:0 0 .375rem}
+      #boot-splash .bs-tagline{font-size:.875rem;font-weight:500;color:var(--mut);margin:0}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+      .no-js-fallback{padding:1.5rem;background:var(--bg);color:var(--fg)}
+      .no-js-fallback h1{font-size:1.75rem;font-weight:700;margin:0 0 .75rem;letter-spacing:-.02em}
+      .no-js-fallback h2{font-size:1.25rem;font-weight:700;margin:1.5rem 0 .5rem}
+      .no-js-fallback h3{font-size:1rem;font-weight:600;margin:1rem 0 .5rem}
+      .no-js-fallback p{line-height:1.7;max-width:65ch;margin:0 0 .75rem}
+      .no-js-fallback ul{padding-left:1.25rem;margin:0 0 1rem}
+      .no-js-fallback li{margin-bottom:.35rem;line-height:1.5}
+      .no-js-fallback nav a{display:inline-block;margin-right:1rem;margin-bottom:.5rem;color:var(--pri);text-decoration:underline}
+      .no-js-fallback nav a:hover{color:var(--fg)}
     </style>
+
+    <!-- When JavaScript is disabled, hide the boot splash so the fallback below stays readable. -->
+    <noscript>
+      <style>#boot-splash{display:none !important}</style>
+    </noscript>
 
     <!-- Apply theme before first paint to avoid a flash of the wrong colour scheme -->
     <script>
@@ -101,6 +116,7 @@
       "@type": "Organization",
       "name": "Maina Voice",
       "url": "https://mainavoice.lat/",
+      "logo": "https://mainavoice.lat/pwa-512x512.png",
       "description": "Open-source local-first speech-to-text dictation and multi-engine benchmarking project.",
       "sameAs": [
         "https://github.com/alwaisy/mainavoice-web"
@@ -108,10 +124,14 @@
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer support",
-        "email": "support@mainavoice.lat"
+        "email": "support@mainavoice.lat",
+        "url": "https://mainavoice.lat/contact",
+        "areaServed": "Worldwide",
+        "availableLanguage": ["English"]
       },
       "address": {
         "@type": "PostalAddress",
+        "addressLocality": "Remote-first",
         "addressCountry": "PK"
       }
     }
@@ -130,23 +150,65 @@
           <line x1="8" y1="22" x2="16" y2="22" />
         </svg>
       </div>
-      <h1>Maina Voice</h1>
-      <p>AI Voice Dictation</p>
-      <h2>Local-first · open source · multimodal voice-to-text</h2>
-      <div class="sr-only">
-        <p>
-          Local-first speech-to-text dictation and multi-engine benchmarking. Record audio in your
-          browser, compare OpenAI GPT-Transcribe, Deepgram Nova-3, NVIDIA Parakeet, Fish Audio and
-          Groq Whisper, and keep every recording, transcript and setting in your own IndexedDB.
-          Your audio is sent directly from your device to the provider you choose using your own API key.
-        </p>
-        <ul>
-          <li>Browser microphone recording and file upload</li>
-          <li>Side-by-side engine speed and cost comparison</li>
-          <li>Local IndexedDB storage with ZIP backup and restore</li>
-        </ul>
-      </div>
+      <p class="bs-title">Maina Voice</p>
+      <p class="bs-tagline">AI Voice Dictation</p>
+      <span class="sr-only">Local-first speech-to-text and benchmarking app.</span>
     </div>
+
+    <!-- No-JS fallback: full content for crawlers and users with JavaScript disabled.
+         Hidden from normal users by the splash screen, which is removed by the Vue app on mount. -->
+    <noscript>
+      <main class="no-js-fallback" role="main">
+        <article class="max-w-3xl mx-auto">
+          <h1>Maina Voice — AI Voice Dictation &amp; Engine Benchmarking</h1>
+          <p>
+            Maina Voice is a local-first, browser-based speech-to-text workbench. Record audio in your
+            browser, compare OpenAI GPT-Transcribe, Deepgram Nova-3, NVIDIA Parakeet, Fish Audio and Groq
+            Whisper, and keep every recording, transcript and setting in your own IndexedDB. Your audio is
+            sent directly from your device to the provider you choose using your own API key. There is no
+            account, no analytics beacon and no first-party backend that stores your data.
+          </p>
+
+          <h2>What you can do without signing up</h2>
+          <ul>
+            <li>Record from your microphone or upload an existing audio file.</li>
+            <li>Run the same clip through multiple speech-to-text engines and compare speed, cost and quality.</li>
+            <li>Track every transcript edit and re-transcription as a versioned history.</li>
+            <li>Export your entire library as a ZIP backup, or import it again on any device.</li>
+          </ul>
+
+          <h3>Compare engines side by side</h3>
+          <p>
+            The Compare view benchmarks OpenAI GPT-Transcribe, Deepgram Nova-3, NVIDIA Parakeet TDT v3,
+            Fish Audio Transcribe-1 and Groq Whisper Large v3 Turbo on the same recording so you can see
+            latency, estimated price and output quality before choosing a provider for your workflow.
+          </p>
+
+          <h3>Privacy by design</h3>
+          <p>
+            Recordings, WAV blobs, generated transcripts, translations, comparison results and application
+            settings live in the IndexedDB inside your own browser. Maina Voice never proxies, logs or
+            stores your audio on its own servers.
+          </p>
+
+          <h2>Get started</h2>
+          <p>
+            Enable JavaScript for the full app, or read the About, Privacy and Contact pages to learn more
+            about the project and how your data is handled.
+          </p>
+
+          <nav aria-label="Static fallback navigation">
+            <a href="/">Record</a>
+            <a href="/compare">Compare</a>
+            <a href="/history">History</a>
+            <a href="/about">About</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/contact">Contact</a>
+          </nav>
+        </article>
+      </main>
+    </noscript>
+
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
