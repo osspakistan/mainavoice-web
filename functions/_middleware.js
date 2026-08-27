@@ -124,22 +124,46 @@ const PAGES = {
   '/contact': { title: CONTACT_TITLE, description: CONTACT_DESC, html: CONTACT_HTML },
 }
 
+function isKnownRoute(path) {
+  const base = path.replace(/\/$/, '') || '/'
+  const exact = ['/', '/compare', '/history', '/settings', '/about', '/privacy', '/contact']
+  if (exact.includes(base))
+    return true
+  return base.startsWith('/history/')
+}
+
 export async function onRequest(context) {
   const request = context.request
   const accept = request.headers.get('accept') || ''
   const url = new URL(request.url)
-  const pathname = url.pathname.replace(/\/$/, '') || '/'
+  const path = url.pathname
+  const base = path.replace(/\/$/, '') || '/'
 
   // Pass static assets straight through. Re-wrapping binary/compressed responses
   // with a new Response object can corrupt them and drops the original status code.
-  if (/\.[^/]{1,10}$/.test(pathname)) {
+  if (/\.[^/]{1,10}$/.test(path)) {
     return context.next()
   }
 
-  const response = await context.next()
+  const assets = context.env.ASSETS
+  let response
+  let is404 = false
+
+  if (!assets) {
+    return context.next()
+  }
+
+  if (isKnownRoute(path)) {
+    response = await assets.fetch(new Request(new URL('/index.html', request.url)))
+  }
+  else {
+    response = await assets.fetch(new Request(new URL('/404.html', request.url)))
+    is404 = true
+  }
+
   const contentType = response.headers.get('Content-Type') || ''
 
-  // Only add Vary / negotiate / inject for HTML pages (404.html included).
+  // Only negotiate / inject for HTML pages.
   if (!contentType.includes('text/html')) {
     return response
   }
@@ -147,7 +171,7 @@ export async function onRequest(context) {
   let html = await response.text()
 
   // Inject static, route-specific HTML for trust-anchor pages so non-JS crawlers see real content.
-  const page = PAGES[pathname]
+  const page = PAGES[base]
   if (page) {
     html = html
       .replace(/<title>[^<]*<\/title>/, `<title>${page.title}</title>`)
@@ -163,7 +187,7 @@ export async function onRequest(context) {
       .replace(/\s{2,}/g, ' ')
       .trim()
 
-    const title = pathname === '/' ? url.host : `${url.host}${pathname}`
+    const title = base === '/' ? url.host : `${url.host}${base}`
     return new Response(`# ${title}\n\n${plain.slice(0, 6000)}`, {
       status: response.status,
       headers: {
@@ -176,7 +200,7 @@ export async function onRequest(context) {
   const headers = new Headers(response.headers)
   headers.set('Vary', 'Accept, Accept-Encoding')
   return new Response(html, {
-    status: response.status,
+    status: is404 ? 404 : response.status,
     statusText: response.statusText,
     headers,
   })
