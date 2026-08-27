@@ -3,17 +3,23 @@ export async function onRequest(context) {
   const accept = request.headers.get('accept') || ''
   const url = new URL(request.url)
 
-  const isStaticFile = /\.[a-zA-Z0-9]+$/.test(url.pathname)
+  // Pass static assets straight through. Re-wrapping binary/compressed responses
+  // with a new Response object can corrupt them and drops the original status code.
+  if (/\.[^/]{1,10}$/.test(url.pathname)) {
+    return context.next()
+  }
 
-  if (accept.includes('text/markdown') && !isStaticFile) {
-    const response = await context.next()
-    const contentType = response.headers.get('Content-Type') || ''
+  const response = await context.next()
+  const contentType = response.headers.get('Content-Type') || ''
 
-    if (!contentType.includes('text/html')) {
-      return response
-    }
+  // Only add Vary / negotiate for HTML pages (404.html included).
+  if (!contentType.includes('text/html')) {
+    return response
+  }
 
-    const html = await response.text()
+  const html = await response.text()
+
+  if (accept.includes('text/markdown')) {
     const plain = html
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -31,8 +37,11 @@ export async function onRequest(context) {
     })
   }
 
-  const response = await context.next()
   const headers = new Headers(response.headers)
   headers.set('Vary', 'Accept, Accept-Encoding')
-  return new Response(response.body, { ...response, headers })
+  return new Response(html, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
 }
