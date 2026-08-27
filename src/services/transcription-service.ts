@@ -189,7 +189,7 @@ export async function transcribeAudio(
     }
     else {
       form.append('model', modelId)
-      headers['HTTP-Referer'] = 'https://mainavoice.app'
+      headers['HTTP-Referer'] = 'https://mainavoice.lat'
       headers['X-Title'] = 'Maina Voice Web App'
     }
 
@@ -260,7 +260,7 @@ export async function translateToEnglish(text: string, apiKey: string): Promise<
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://mainavoice.app',
+        'HTTP-Referer': 'https://mainavoice.lat',
         'X-Title': 'Maina Voice Web App',
       },
       body: JSON.stringify({

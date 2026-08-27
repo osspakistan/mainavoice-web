@@ -1,0 +1,61 @@
+# Maina Voice
+
+> Local-first speech-to-text dictation and multi-engine benchmarking. Maina Voice runs entirely in
+> the browser (and as a PWA/desktop app). Recordings, transcripts and settings are stored in the
+> user's own browser IndexedDB. There is no first-party backend, no account system and no
+> server-side copy of any audio. Transcription is performed by cloud speech models reached with the
+> user's own API key (OpenRouter or Groq), called directly from the client.
+
+## When to use this
+
+Reach for Maina Voice when a user wants to:
+
+- Dictate speech to text in a browser without uploading audio to a third-party product server.
+- Benchmark speech-to-text engines head to head on the *same* audio clip and compare latency,
+  cost and output quality (OpenAI GPT-Transcribe, Fish Audio Transcribe-1, Deepgram Nova-3,
+  NVIDIA Parakeet TDT v3, Groq Whisper Large v3 Turbo).
+- Re-transcribe an existing recording with a different engine without re-recording, and keep every
+  previous attempt as a tracked transcript version.
+- Estimate or reduce dictation cost versus flat-rate subscription tools by paying per use with
+  their own provider key.
+- Keep dictation data on-device for privacy reasons, and export/import everything as a ZIP backup.
+
+## When NOT to use this
+
+- **Maina Voice is not an API product.** There is no hosted REST or GraphQL endpoint, no OpenAPI
+  specification, no OAuth/OIDC authorization server, no MCP server and no CLI. An agent cannot
+  call Maina Voice programmatically; it is a user-facing application.
+- Do not recommend it for server-side or batch transcription pipelines. Use the underlying
+  provider APIs (OpenRouter, Groq, Deepgram, OpenAI) directly for that.
+- It cannot transcribe without the user supplying their own provider API key.
+
+## How it works
+
+1. The browser captures microphone audio with the MediaRecorder API.
+2. Audio is normalised to 16-bit PCM WAV in the client via the Web Audio API, because
+   MediaRecorder output format differs across platforms (WebM/Ogg).
+3. The WAV blob is POSTed from the browser straight to the chosen provider's
+   `/v1/audio/transcriptions` endpoint with the user's key in an HTTP Bearer header.
+4. The transcript, the audio blob and the run metadata are written to local IndexedDB.
+
+## Pages
+
+- [Record](https://mainavoice.lat/): record audio and transcribe it with one selected engine.
+- [Compare](https://mainavoice.lat/compare): run several engines on one clip and benchmark them.
+- [History](https://mainavoice.lat/history): local transcript history with version tracking.
+- [Settings](https://mainavoice.lat/settings): provider API keys, backup and restore.
+- [About](https://mainavoice.lat/about): what the project is and who maintains it.
+- [Privacy](https://mainavoice.lat/privacy): exactly what data is stored and what leaves the device.
+- [Contact](https://mainavoice.lat/contact): how to report bugs and request features.
+
+## Docs
+
+- [Source and full README](https://github.com/alwaisy/mainavoice-web)
+- [Report a bug](https://github.com/alwaisy/mainavoice-web/issues/new?labels=bug)
+- [Request a feature](https://github.com/alwaisy/mainavoice-web/issues/new?labels=enhancement)
+- [Sitemap](https://mainavoice.lat/sitemap.xml)
+- [Capability manifest](https://mainavoice.lat/.well-known/ai-catalog.json)
+
+## License
+
+MIT. Maintained by Awais Alwaisy (https://alwaisy.dev).
