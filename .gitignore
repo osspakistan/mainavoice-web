@@ -36,3 +36,6 @@ gen
 target
 product/
 .wtf/
+
+# MCP server config (local tooling)
+.mcp.json
