@@ -340,10 +340,12 @@ onUnmounted(() => {
             isProcessing ? 'opacity-50 pointer-events-none' : '',
           ]"
           :disabled="isProcessing"
+          :aria-label="isRecording ? 'Stop benchmark recording' : 'Start benchmark recording'"
+          :aria-pressed="isRecording"
           @click="toggleBenchmarkRecording"
         >
-          <Square v-if="isRecording" class="w-7 h-7 fill-current" />
-          <Mic v-else class="w-9 h-9" />
+          <Square v-if="isRecording" class="w-7 h-7 fill-current" aria-hidden="true" />
+          <Mic v-else class="w-9 h-9" aria-hidden="true" />
         </button>
       </div>
 
@@ -393,7 +395,7 @@ onUnmounted(() => {
                 Speech Model {{ index }}
               </label>
               <Select v-model="selectedModels[index - 1]">
-                <SelectTrigger class="w-full h-8 text-xs bg-background">
+                <SelectTrigger class="w-full h-8 text-xs bg-background" :aria-label="`Select speech model ${index}`">
                   <SelectValue placeholder="Select Speech Model" />
                 </SelectTrigger>
                 <SelectContent>

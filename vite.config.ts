@@ -1,16 +1,65 @@
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const host = process.env.TAURI_DEV_HOST
+/**
+ * Preload the hashed entry chunks and make the main stylesheet non-blocking.
+ *
+ * Critical above-the-fold CSS is inlined in `index.html`, so the full
+ * stylesheet does not need to block first paint. We swap it to a
+ * `media="print"` + `onload` pattern (with a `<noscript>` fallback) and add
+ * `preload`/`modulepreload` hints so both assets still download immediately.
+ */
+function assetLoadingOptimizations(): Plugin {
+  return {
+    name: 'asset-loading-optimizations',
+    transformIndexHtml(html, ctx) {
+      const bundle = (ctx as { bundle?: Record<string, { type: string, fileName: string, isEntry?: boolean }> }).bundle
+      if (!bundle)
+        return html
+
+      const cssFiles: string[] = []
+      const jsEntries: string[] = []
+      for (const [name, chunk] of Object.entries(bundle)) {
+        if (chunk.type === 'asset' && name.endsWith('.css'))
+          cssFiles.push(chunk.fileName)
+        if (chunk.type === 'chunk' && chunk.isEntry && chunk.fileName.endsWith('.js'))
+          jsEntries.push(chunk.fileName)
+      }
+
+      let out = html
+
+      // Make each emitted stylesheet non-blocking.
+      for (const file of cssFiles) {
+        const blocking = new RegExp(`<link[^>]*rel="stylesheet"[^>]*href="/${file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`)
+        out = out.replace(
+          blocking,
+          `<link rel="stylesheet" crossorigin href="/${file}" media="print" onload="this.media='all';this.onload=null">`
+          + `<noscript><link rel="stylesheet" crossorigin href="/${file}"></noscript>`,
+        )
+      }
+
+      const hints = [
+        ...cssFiles.map(f => `<link rel="preload" as="style" href="/${f}">`),
+        ...jsEntries.map(f => `<link rel="modulepreload" href="/${f}">`),
+      ]
+      if (hints.length > 0)
+        out = out.replace('</head>', `    ${hints.join('\n    ')}\n  </head>`)
+
+      return out
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [
     vue(),
     tailwindcss(),
+    assetLoadingOptimizations(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
@@ -61,36 +110,6 @@ export default defineConfig(async () => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
       },
     }),
   ],
@@ -99,27 +118,9 @@ export default defineConfig(async () => ({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  envPrefix: ['VITE_', 'TAURI_ENV_*'],
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  envPrefix: ['VITE_'],
   server: {
-    host: host || false,
-    port: 1420,
-    strictPort: true,
-    hmr: host
-      ? {
-          protocol: 'ws',
-          host,
-          port: 1421,
-        }
-      : undefined,
-    watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ['**/src-tauri/**'],
-    },
+    port: 5173,
   },
 }))
 

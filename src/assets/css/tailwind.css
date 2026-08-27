@@ -37,7 +37,7 @@
   --sidebar-border: #d2cbbb;
   --sidebar-ring: #2e2e2e;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   --font-mono: 'JetBrains Mono', monospace;
   --radius: 0.5rem;
   --shadow-x: 0px;
@@ -92,7 +92,7 @@
   --sidebar-border: #2c2c2c;
   --sidebar-ring: #d1cfc0;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   --font-mono: 'JetBrains Mono', monospace;
   --radius: 0.5rem;
   --shadow-x: 0px;

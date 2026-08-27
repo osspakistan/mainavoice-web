@@ -273,7 +273,7 @@ onUnmounted(() => {
     <!-- Top Bar: Model Selector + Info Button -->
     <div class="flex items-center justify-center gap-2">
       <Select v-model="store.selectedModel">
-        <SelectTrigger class="w-[320px] bg-card border-border shadow-xs">
+        <SelectTrigger class="w-[320px] bg-card border-border shadow-xs" aria-label="Select speech-to-text model">
           <SelectValue placeholder="Select speech model" />
         </SelectTrigger>
 
@@ -337,10 +337,12 @@ onUnmounted(() => {
             isProcessing ? 'opacity-50 pointer-events-none' : '',
           ]"
           :disabled="isProcessing"
+          :aria-label="isRecording ? 'Stop recording' : 'Start recording'"
+          :aria-pressed="isRecording"
           @click="toggleRecording"
         >
-          <Square v-if="isRecording" class="w-8 h-8 fill-current" />
-          <Mic v-else class="w-10 h-10" />
+          <Square v-if="isRecording" class="w-8 h-8 fill-current" aria-hidden="true" />
+          <Mic v-else class="w-10 h-10" aria-hidden="true" />
         </button>
       </div>
 

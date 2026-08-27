@@ -1,29 +1,11 @@
 import { createPinia } from 'pinia'
-import { registerSW } from 'virtual:pwa-register'
 import { createApp } from 'vue'
 import App from './app.vue'
 import router from './router'
 import './assets/css/base.css'
 
-registerSW({ immediate: true })
-
-// ─── Apply theme BEFORE Vue mounts to prevent flash ───────────────────────────
-// Reads maina_theme_mode from localStorage immediately on script parse.
-// 'light' → no class, 'dark' → add .dark, 'system' → follow OS preference.
-;
-
-(function applyThemeEarly() {
-  const stored = localStorage.getItem('maina_theme_mode') || 'system'
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const shouldDark
-    = stored === 'dark' || (stored === 'system' && prefersDark)
-  if (shouldDark) {
-    document.documentElement.classList.add('dark')
-  }
-  else {
-    document.documentElement.classList.remove('dark')
-  }
-})()
+// Theme is applied pre-paint by an inline script in index.html to avoid a
+// flash of the wrong colour scheme. Nothing to do here.
 
 const pinia = createPinia()
 const app = createApp(App)
@@ -32,3 +14,16 @@ app.use(pinia)
 app.use(router)
 
 app.mount('#app')
+
+// Register the PWA service worker after the app is interactive so it does not
+// compete with hydration for main-thread time (lowers Total Blocking Time).
+function registerServiceWorker() {
+  import('virtual:pwa-register')
+    .then(({ registerSW }) => registerSW({ immediate: true }))
+    .catch(() => {})
+}
+const win = window as Window & { requestIdleCallback?: (cb: () => void) => void }
+if (typeof win.requestIdleCallback === 'function')
+  win.requestIdleCallback(registerServiceWorker)
+else
+  win.addEventListener('load', registerServiceWorker)

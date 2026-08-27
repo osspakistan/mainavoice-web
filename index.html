@@ -39,10 +39,35 @@
     <meta name="twitter:description" content="Speech to text dictation and multi-engine speed benchmarking with local IndexedDB privacy." />
     <meta name="twitter:image" content="https://mainavoice.app/og-image.png" />
 
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <!-- Self-hosted fonts (preloaded for fastest FCP) -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/jetbrains-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Inline critical CSS to avoid render-blocking external CSS for first paint -->
+    <style>
+      :root{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;--bg:#e9e4d8;--fg:#1e1e1e;--card:#f4efe4;--bd:#d2cbbb;--pri:#2e2e2e;--mut:#5e5a52}
+      html.dark{--bg:#141414;--fg:#e8e3da;--card:#1c1c1c;--bd:#2c2c2c;--pri:#d1cfc0;--mut:#8e8a83}
+      *{box-sizing:border-box}
+      html{height:100%;font-size:16px;background:var(--bg)}
+      body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.01em;overflow-x:hidden}
+      #boot-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);color:var(--fg)}
+      #boot-splash .bs-box{width:5rem;height:5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--bd);margin-bottom:1.5rem}
+      #boot-splash h1{font-size:1.875rem;font-weight:700;letter-spacing:-.025em;margin:0 0 .375rem}
+      #boot-splash p{font-size:.875rem;font-weight:500;color:var(--mut);margin:0}
+    </style>
+
+    <!-- Apply theme before first paint to avoid a flash of the wrong colour scheme -->
+    <script>
+      (function () {
+        try {
+          var s = localStorage.getItem('maina_theme_mode') || 'system'
+          var d = window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (s === 'dark' || (s === 'system' && d)) document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
+
+    <!-- Non-blocking stylesheet + asset preloads injected by vite (asset-loading-optimizations) -->
 
     <!-- Structured Data (JSON-LD) for Search Rich Snippets -->
     <script type="application/ld+json">
@@ -70,6 +95,20 @@
   </head>
 
   <body class="bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+    <!-- Static boot splash: paints immediately so FCP/LCP do not wait on JS.
+         Removed by splash-screen.vue on mount. -->
+    <div id="boot-splash">
+      <div class="bs-box">
+        <svg viewBox="0 0 24 24" fill="none" width="40" height="40" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor" stroke="none" />
+          <path d="M5 11a7 7 0 0 0 14 0" />
+          <line x1="12" y1="18" x2="12" y2="22" />
+          <line x1="8" y1="22" x2="16" y2="22" />
+        </svg>
+      </div>
+      <h1>Maina Voice</h1>
+      <p>AI Voice Dictation</p>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

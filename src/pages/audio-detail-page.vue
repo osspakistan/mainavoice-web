@@ -518,7 +518,7 @@ onUnmounted(() => {
 
           <div class="flex items-center gap-2">
             <Select v-model="selectedModel">
-              <SelectTrigger class="w-[260px] h-9 text-xs">
+              <SelectTrigger class="w-[260px] h-9 text-xs" aria-label="Select cloud speech model">
                 <SelectValue placeholder="Select Model" />
               </SelectTrigger>
 
@@ -568,7 +568,7 @@ onUnmounted(() => {
               :model-value="item.activeVersionIndex.toString()"
               @update:model-value="(val) => { if (item && val) store.setActiveVersion(item.id, Number.parseInt(val as string)) }"
             >
-              <SelectTrigger class="h-8 text-xs font-bold bg-muted border-border">
+              <SelectTrigger class="h-8 text-xs font-bold bg-muted border-border" aria-label="Select transcript version">
                 <SelectValue placeholder="Select version" />
               </SelectTrigger>
               <SelectContent>
