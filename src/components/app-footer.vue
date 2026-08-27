@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Bug, Github, Lightbulb } from 'lucide-vue-next'
+import { Bug, FileText, Github, Lightbulb } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 
 const ISSUES_URL = 'https://github.com/alwaisy/mainavoice-web/issues'
 const NEW_BUG_URL = 'https://github.com/alwaisy/mainavoice-web/issues/new?labels=bug&title=%5BBug%5D%20'
@@ -25,6 +26,31 @@ const NEW_FEATURE_URL = 'https://github.com/alwaisy/mainavoice-web/issues/new?la
         <a :href="ISSUES_URL" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition">
           <Github class="w-3 h-3" />
           Issues
+        </a>
+
+        <span class="text-border hidden sm:inline">·</span>
+
+        <RouterLink
+          to="/about"
+          class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
+        >
+          About
+        </RouterLink>
+
+        <span class="text-border hidden sm:inline">·</span>
+
+        <RouterLink
+          to="/privacy"
+          class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
+        >
+          Privacy
+        </RouterLink>
+
+        <span class="text-border hidden sm:inline">·</span>
+
+        <a href="/llms.txt" class="hidden sm:inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition">
+          <FileText class="w-3 h-3" />
+          llms.txt
         </a>
       </nav>
     </div>

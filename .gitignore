@@ -39,3 +39,4 @@ product/
 
 # MCP server config (local tooling)
 .mcp.json
+.wrangler/tmp/

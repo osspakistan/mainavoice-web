@@ -31,11 +31,27 @@ const routes = [
         name: 'settings',
         component: () => import('@/pages/settings-page.vue'),
       },
+      {
+        path: 'about',
+        name: 'about',
+        component: () => import('@/pages/about-page.vue'),
+      },
+      {
+        path: 'privacy',
+        name: 'privacy',
+        component: () => import('@/pages/privacy-page.vue'),
+      },
+      {
+        path: 'contact',
+        name: 'contact',
+        component: () => import('@/pages/contact-page.vue'),
+      },
     ],
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/',
+    name: 'not-found',
+    component: () => import('@/pages/not-found-page.vue'),
   },
 ]
 

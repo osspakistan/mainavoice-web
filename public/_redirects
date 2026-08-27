@@ -1,0 +1,12 @@
+# Serve the SPA shell for known app routes so the Vue router can handle them.
+/ /index.html 200
+/compare /index.html 200
+/history /index.html 200
+/history/* /index.html 200
+/settings /index.html 200
+/about /index.html 200
+/privacy /index.html 200
+/contact /index.html 200
+
+# Everything else returns a real 404.
+/* /404.html 404

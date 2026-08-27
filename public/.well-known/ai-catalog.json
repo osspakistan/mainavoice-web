@@ -1,0 +1,21 @@
+{
+  "specVersion": "0.1",
+  "host": {
+    "canonical": "https://mainavoice.lat",
+    "displayName": "Maina Voice"
+  },
+  "entries": [
+    {
+      "urn": "urn:air:mainavoice.lat:app:maina-voice",
+      "displayName": "Maina Voice",
+      "type": "text/html",
+      "url": "https://mainavoice.lat/",
+      "description": "Local-first browser app for speech-to-text dictation and multi-engine benchmarking. All recordings and transcripts stay in the user's browser IndexedDB.",
+      "representativeQueries": [
+        "Transcribe speech to text in the browser without uploading audio to a backend server",
+        "Compare OpenAI GPT-Transcribe, Deepgram Nova-3, NVIDIA Parakeet, Fish Audio and Groq Whisper side by side",
+        "Dictate audio and keep transcript history stored locally"
+      ]
+    }
+  ]
+}
