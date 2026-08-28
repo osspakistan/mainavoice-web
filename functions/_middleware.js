@@ -146,7 +146,7 @@ export async function onRequest(context) {
 
   // Pass static assets straight through. Re-wrapping binary/compressed responses
   // with a new Response object can corrupt them and drops the original status code.
-  if (/\.[^/]{1,10}$/.test(path)) {
+  if (/\.[a-z0-9_-]{1,20}$/i.test(path)) {
     return context.next()
   }
 
