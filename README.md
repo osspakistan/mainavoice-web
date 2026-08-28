@@ -167,9 +167,9 @@ public/         Static assets, icons, PWA manifest
 
 ## How the audio pipeline works
 
-The browser's `MediaRecorder` API captures microphone input as WebM or Ogg depending on the platform. Before sending audio to any provider, `transcription-service.ts` decodes it and re-encodes it to 16-bit PCM WAV via the Web Audio API. This standardizes audio input across browsers and prevents format-related API rejections.
+The browser's `MediaRecorder` API captures microphone input directly as lightweight WebM Opus (or Ogg/MP4 depending on browser). Maina Voice streams this compact audio payload directly to OpenRouter and Groq endpoints (`/audio/transcriptions`), minimizing network latency and delivering sub-second transcription speeds without client-side CPU bloat.
 
-Transcriptions are sent to OpenRouter's `/v1/audio/transcriptions` endpoint, where your chosen model processes the request.
+Transcriptions stream asynchronously and independently per model slot, rendering each card the millisecond its result arrives.
 
 ## Data and privacy
 
