@@ -132,13 +132,14 @@ async function toggleBenchmarkRecording() {
         const audioBlob = new Blob(audioChunks, { type: mimeType })
         const duration = Math.max(recordSeconds.value, 1)
 
-        // Initialize empty slot results & set per-slot loading states
+        // Initialize empty slot results & set per-slot loading states atomically
         results.value = [null, null, null, null, null]
-        slotProcessing.value = [false, false, false, false, false]
-        for (let s = 0; s < modelCount.value; s++) {
-          slotProcessing.value[s] = true
-        }
+        const initialProcessing = [false, false, false, false, false]
+        for (let s = 0; s < modelCount.value; s++) initialProcessing[s] = true
+        slotProcessing.value = initialProcessing
         isProcessing.value = true
+
+        await new Promise(resolve => setTimeout(resolve, 0)) // let Vue flush reactivity before dispatching
 
         // Stream transcription in parallel for active slots independently
         const activePromises = []
@@ -220,10 +221,10 @@ async function handleFileChange(event: Event) {
   micError.value = null
   isProcessing.value = true
   results.value = [null, null, null, null, null]
-  slotProcessing.value = [false, false, false, false, false]
-  for (let s = 0; s < modelCount.value; s++) {
-    slotProcessing.value[s] = true
-  }
+  const initialProcessing2 = [false, false, false, false, false]
+  for (let s = 0; s < modelCount.value; s++) initialProcessing2[s] = true
+  slotProcessing.value = initialProcessing2
+  await new Promise(resolve => setTimeout(resolve, 0)) // flush Vue reactivity
 
   try {
     const activePromises = []

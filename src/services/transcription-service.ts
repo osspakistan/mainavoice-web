@@ -91,26 +91,13 @@ const PRICE_PER_MIN: Record<string, number> = {
   'nvidia/parakeet-tdt-0.6b-v3': 0.0035,
 }
 
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const result = (reader.result as string) || ''
-      const base64 = result.includes(',') ? (result.split(',')[1] ?? '') : result
-      resolve(base64)
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
-
 export async function transcribeAudio(
   audioSource: Blob | string,
   modelId: string,
   openRouterApiKey: string,
   durationSeconds: number = 5,
   groqApiKey?: string,
-  geminiApiKey?: string,
+  _geminiApiKey?: string,
 ): Promise<TranscriptionVersion> {
   const startTime = Date.now()
 
@@ -118,16 +105,10 @@ export async function transcribeAudio(
   const isGeminiModel = modelId.startsWith('google/')
   const effectiveApiKey = isGroqModel
     ? (groqApiKey || openRouterApiKey)
-    : isGeminiModel
-      ? geminiApiKey
-      : openRouterApiKey
+    : openRouterApiKey
 
   if (!effectiveApiKey || effectiveApiKey.trim() === '') {
-    const keyName = isGroqModel
-      ? 'Groq API Key (or OpenRouter Key)'
-      : isGeminiModel
-        ? 'Google Gemini API Key'
-        : 'OpenRouter API Key'
+    const keyName = isGroqModel ? 'Groq API Key (or OpenRouter Key)' : 'OpenRouter API Key'
     return {
       versionNumber: 1,
       engineName: modelId,
@@ -153,100 +134,42 @@ export async function transcribeAudio(
       throw new TypeError('Invalid audio source provided to transcribeAudio')
     }
 
-    // Handler for Google Gemini 3.5 Transcribe
+    // Route google/gemini-3.5-transcribe through OpenRouter audio transcriptions endpoint
+    // (gemini-3.5-transcribe is a dedicated STT model, not a generateContent multimodal model)
     if (isGeminiModel) {
-      const base64Data = await blobToBase64(audioBlob)
-      const mimeType = audioBlob.type || 'audio/webm'
-      const actualModel = 'gemini-3.5-transcribe'
+      const form = new FormData()
+      form.append('file', audioBlob, 'recording.webm')
+      form.append('model', 'google/gemini-3.5-transcribe')
 
-      let textOutput = ''
-      let lastError = ''
+      const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${effectiveApiKey}`,
+          'HTTP-Referer': 'https://mainavoice.lat',
+          'X-Title': 'Maina Voice Web App',
+        },
+        body: form,
+      })
 
-      // Attempt 1: generateContent with gemini-3.5-transcribe
-      try {
-        const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${effectiveApiKey}`
-        const response = await fetch(endpointUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    inlineData: {
-                      mimeType,
-                      data: base64Data,
-                    },
-                  },
-                  {
-                    text: 'Transcribe the spoken words verbatim. Return ONLY the plain transcription text with punctuation. Do not add explanations, conversational comments, or code blocks.',
-                  },
-                ],
-              },
-            ],
-          }),
-        })
-
-        if (response.ok) {
-          const json = await response.json()
-          textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
-        }
-        else {
-          const errText = await response.text()
-          try {
-            const errJson = JSON.parse(errText)
-            lastError = errJson.error?.message || `HTTP ${response.status}: ${response.statusText}`
-          }
-          catch {
-            lastError = `HTTP ${response.status}: ${response.statusText}`
-          }
-        }
-      }
-      catch (e: any) {
-        lastError = e?.message || String(e)
-      }
-
-      // Attempt 2: Interactions API for gemini-3.5-transcribe
-      if (!textOutput) {
+      if (!response.ok) {
+        const errText = await response.text()
+        let msg = `HTTP ${response.status}`
         try {
-          const interactionsUrl = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${effectiveApiKey}`
-          const interResponse = await fetch(interactionsUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': effectiveApiKey,
-            },
-            body: JSON.stringify({
-              model: actualModel,
-              input: [
-                {
-                  type: 'audio',
-                  mime_type: mimeType,
-                  data: base64Data,
-                },
-              ],
-            }),
-          })
-
-          if (interResponse.ok) {
-            const interJson = await interResponse.json()
-            textOutput = interJson.output_text || interJson.outputs?.[0]?.text || interJson.text || ''
-          }
+          msg = JSON.parse(errText)?.error?.message || msg
         }
         catch {}
+        throw new Error(`Google Gemini Error: ${msg}`)
       }
 
-      if (!textOutput) {
-        throw new Error(lastError || 'No transcript text was returned by Google Gemini API.')
-      }
+      const json = await response.json()
+      let textOutput = (json.text || '').trim()
+
+      if (!textOutput)
+        throw new Error('Google Gemini returned an empty transcript.')
 
       textOutput = autoTransliterateIfUrduRegion(textOutput)
-
       const latencyMs = Date.now() - startTime
       const wordCount = textOutput.trim().split(/\s+/).filter(Boolean).length
-      const costEstimate = 0.0
 
       return {
         versionNumber: 1,
@@ -254,7 +177,7 @@ export async function transcribeAudio(
         text: textOutput,
         latencyMs,
         wordCount,
-        costEstimate,
+        costEstimate: 0.0,
         timestamp: new Date().toISOString(),
       }
     }
