@@ -173,7 +173,6 @@ async function runReTranscription() {
       store.openRouterApiKey,
       60,
       store.groqApiKey,
-      store.geminiApiKey,
     )
 
     if (

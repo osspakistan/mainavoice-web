@@ -33,15 +33,6 @@ export const ALL_MODELS: ModelInfo[] = [
     description: 'High-accuracy whisper & multimodal transcription engine.',
   },
   {
-    id: 'google/gemini-3.5-transcribe',
-    name: 'Google Gemini 3.5 Transcribe',
-    provider: 'Google',
-    costPerMin: 0.0,
-    latencyGrade: 'fast',
-    accuracyGrade: 'state-of-the-art',
-    description: 'High-precision speech transcription with filler word removal and 85+ language support.',
-  },
-  {
     id: 'groq/whisper-large-v3-turbo',
     name: 'Groq Whisper Large v3 Turbo',
     provider: 'Groq',
@@ -82,10 +73,8 @@ export function getSortedModels(defaultModelId?: string): ModelInfo[] {
 }
 
 const PRICE_PER_MIN: Record<string, number> = {
-  'openai/gpt-transcribe': 0.0045,
   'fish-audio/transcribe-1': 0.0038,
-  'google/gemini-3.5-transcribe': 0.0,
-  'google/gemini-3.5-transcribe-preview': 0.0,
+  'openai/gpt-transcribe': 0.0045,
   'groq/whisper-large-v3-turbo': 0.00067,
   'deepgram/nova-3': 0.0043,
   'nvidia/parakeet-tdt-0.6b-v3': 0.0035,
@@ -97,12 +86,10 @@ export async function transcribeAudio(
   openRouterApiKey: string,
   durationSeconds: number = 5,
   groqApiKey?: string,
-  _geminiApiKey?: string,
 ): Promise<TranscriptionVersion> {
   const startTime = Date.now()
 
   const isGroqModel = modelId.startsWith('groq/')
-  const isGeminiModel = modelId.startsWith('google/')
   const effectiveApiKey = isGroqModel
     ? (groqApiKey || openRouterApiKey)
     : openRouterApiKey
@@ -132,54 +119,6 @@ export async function transcribeAudio(
     }
     else {
       throw new TypeError('Invalid audio source provided to transcribeAudio')
-    }
-
-    // Route google/gemini-3.5-transcribe through OpenRouter audio transcriptions endpoint
-    // (gemini-3.5-transcribe is a dedicated STT model, not a generateContent multimodal model)
-    if (isGeminiModel) {
-      const form = new FormData()
-      form.append('file', audioBlob, 'recording.webm')
-      form.append('model', 'google/gemini-3.5-transcribe')
-
-      const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${effectiveApiKey}`,
-          'HTTP-Referer': 'https://mainavoice.lat',
-          'X-Title': 'Maina Voice Web App',
-        },
-        body: form,
-      })
-
-      if (!response.ok) {
-        const errText = await response.text()
-        let msg = `HTTP ${response.status}`
-        try {
-          msg = JSON.parse(errText)?.error?.message || msg
-        }
-        catch {}
-        throw new Error(`Google Gemini Error: ${msg}`)
-      }
-
-      const json = await response.json()
-      let textOutput = (json.text || '').trim()
-
-      if (!textOutput)
-        throw new Error('Google Gemini returned an empty transcript.')
-
-      textOutput = autoTransliterateIfUrduRegion(textOutput)
-      const latencyMs = Date.now() - startTime
-      const wordCount = textOutput.trim().split(/\s+/).filter(Boolean).length
-
-      return {
-        versionNumber: 1,
-        engineName: modelId,
-        text: textOutput,
-        latencyMs,
-        wordCount,
-        costEstimate: 0.0,
-        timestamp: new Date().toISOString(),
-      }
     }
 
     const form = new FormData()

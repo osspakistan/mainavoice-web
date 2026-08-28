@@ -18,9 +18,9 @@ const modelCount = ref<2 | 3 | 4 | 5>(5)
 const selectedModels = ref<string[]>([
   sortedModels.value[0]?.id || 'fish-audio/transcribe-1',
   sortedModels.value[1]?.id || 'openai/gpt-transcribe',
-  sortedModels.value[2]?.id || 'google/gemini-3.5-transcribe',
-  sortedModels.value[3]?.id || 'groq/whisper-large-v3-turbo',
-  sortedModels.value[4]?.id || 'deepgram/nova-3',
+  sortedModels.value[2]?.id || 'groq/whisper-large-v3-turbo',
+  sortedModels.value[3]?.id || 'deepgram/nova-3',
+  sortedModels.value[4]?.id || 'nvidia/parakeet-tdt-0.6b-v3',
 ])
 
 // Results array for up to 5 models
@@ -153,7 +153,6 @@ async function toggleBenchmarkRecording() {
                 store.openRouterApiKey,
                 duration,
                 store.groqApiKey,
-                store.geminiApiKey,
               )
 
               // 1. Immediately display this slot's result as soon as it arrives!
@@ -238,7 +237,6 @@ async function handleFileChange(event: Event) {
             store.openRouterApiKey,
             60,
             store.groqApiKey,
-            store.geminiApiKey,
           )
 
           // 1. Immediately display result
