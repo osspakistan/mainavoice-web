@@ -7,7 +7,7 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; img-src 'self' data: https: blob:; media-src 'self' blob: data:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' blob: data: https://openrouter.ai https://api.groq.com https://generativelanguage.googleapis.com https://*.cloudflareinsights.com; manifest-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: https: blob:; media-src 'self' blob: data:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' blob: data: https://openrouter.ai https://api.groq.com https://generativelanguage.googleapis.com https://cloudflareinsights.com https://*.cloudflareinsights.com https://api.openai.com https://api.deepgram.com https://api.fish.audio; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'
   Link: </llms.txt>; rel="describedby", </sitemap.xml>; rel="sitemap"
 
 /.well-known/ai-catalog.json
