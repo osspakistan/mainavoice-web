@@ -49,6 +49,7 @@ const isProcessing = ref(false)
 const recordSeconds = ref(0)
 const micError = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const slotProcessing = ref<boolean[]>([false, false, false, false, false])
 
 let timer: number | null = null
 let mediaRecorder: MediaRecorder | null = null
@@ -131,35 +132,46 @@ async function toggleBenchmarkRecording() {
         const audioBlob = new Blob(audioChunks, { type: mimeType })
         const duration = Math.max(recordSeconds.value, 1)
 
-        // Initialize empty slot results
+        // Initialize empty slot results & set per-slot loading states
         results.value = [null, null, null, null, null]
+        slotProcessing.value = [false, false, false, false, false]
+        for (let s = 0; s < modelCount.value; s++) {
+          slotProcessing.value[s] = true
+        }
         isProcessing.value = true
 
-        // Stream transcription in parallel for active slots
+        // Stream transcription in parallel for active slots independently
         const activePromises = []
         for (let i = 0; i < modelCount.value; i++) {
           const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
           const slotTask = (async (slotIndex: number) => {
-            const res = await transcribeAudio(
-              audioBlob,
-              modelId,
-              store.openRouterApiKey,
-              duration,
-              store.groqApiKey,
-              store.geminiApiKey,
-            )
+            try {
+              const res = await transcribeAudio(
+                audioBlob,
+                modelId,
+                store.openRouterApiKey,
+                duration,
+                store.groqApiKey,
+                store.geminiApiKey,
+              )
 
-            if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
-              try {
-                res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
-                activeTabs.value[slotIndex] = 'english'
+              if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
+                try {
+                  res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
+                  activeTabs.value[slotIndex] = 'english'
+                }
+                catch {}
               }
-              catch {}
-            }
 
-            // Immediately display this slot's result as soon as it arrives!
-            results.value[slotIndex] = res
-            return res
+              // Immediately display this slot's result as soon as it arrives!
+              results.value[slotIndex] = res
+              results.value = [...results.value]
+              return res
+            }
+            finally {
+              slotProcessing.value[slotIndex] = false
+              slotProcessing.value = [...slotProcessing.value]
+            }
           })(i)
 
           activePromises.push(slotTask)
@@ -180,6 +192,7 @@ async function toggleBenchmarkRecording() {
       startTimer()
       isRecording.value = true
       results.value = [null, null, null, null, null]
+      slotProcessing.value = [false, false, false, false, false]
     }
     catch (err: any) {
       micError.value = err?.message || String(err)
@@ -203,31 +216,42 @@ async function handleFileChange(event: Event) {
   micError.value = null
   isProcessing.value = true
   results.value = [null, null, null, null, null]
+  slotProcessing.value = [false, false, false, false, false]
+  for (let s = 0; s < modelCount.value; s++) {
+    slotProcessing.value[s] = true
+  }
 
   try {
     const activePromises = []
     for (let i = 0; i < modelCount.value; i++) {
       const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
       const slotTask = (async (slotIndex: number) => {
-        const res = await transcribeAudio(
-          file,
-          modelId,
-          store.openRouterApiKey,
-          60,
-          store.groqApiKey,
-          store.geminiApiKey,
-        )
+        try {
+          const res = await transcribeAudio(
+            file,
+            modelId,
+            store.openRouterApiKey,
+            60,
+            store.groqApiKey,
+            store.geminiApiKey,
+          )
 
-        if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
-          try {
-            res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
-            activeTabs.value[slotIndex] = 'english'
+          if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
+            try {
+              res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
+              activeTabs.value[slotIndex] = 'english'
+            }
+            catch {}
           }
-          catch {}
-        }
 
-        results.value[slotIndex] = res
-        return res
+          results.value[slotIndex] = res
+          results.value = [...results.value]
+          return res
+        }
+        finally {
+          slotProcessing.value[slotIndex] = false
+          slotProcessing.value = [...slotProcessing.value]
+        }
       })(i)
 
       activePromises.push(slotTask)
@@ -245,6 +269,7 @@ async function handleFileChange(event: Event) {
   }
   finally {
     isProcessing.value = false
+    slotProcessing.value = [false, false, false, false, false]
   }
 }
 
@@ -497,7 +522,11 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <!-- Idle Placeholder -->
+          <!-- Processing / Idle Placeholder -->
+          <div v-else-if="slotProcessing[index - 1]" class="py-10 text-center text-xs text-muted-foreground animate-pulse flex flex-col items-center justify-center gap-2">
+            <span class="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span>Transcribing with Speech Model {{ index }}...</span>
+          </div>
           <div v-else class="py-10 text-center text-xs text-muted-foreground">
             Transcription output for Model {{ index }} will appear here.
           </div>

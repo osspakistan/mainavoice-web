@@ -14,32 +14,32 @@ export interface ModelInfo {
 
 export const ALL_MODELS: ModelInfo[] = [
   {
-    id: 'fish-audio/transcribe-1',
-    name: 'Fish Audio Transcribe-1',
-    provider: 'Fish Audio',
-    costPerMin: 0.0038,
-    latencyGrade: 'fast',
-    accuracyGrade: 'very-high',
-    description: 'Multilingual speech recognition with broad language support.',
-    badge: 'Best Accuracy & Winner',
-  },
-  {
     id: 'openai/gpt-transcribe',
     name: 'OpenAI GPT-Transcribe',
     provider: 'OpenAI',
     costPerMin: 0.0045,
     latencyGrade: 'fast',
     accuracyGrade: 'state-of-the-art',
-    description: 'High-accuracy whisper & multimodal transcription engine.',
+    description: 'High-accuracy whisper & multimodal transcription engine with intelligent paragraphing.',
+    badge: 'Polished & Paragraphing',
   },
   {
-    id: 'google/gemini-3.5-transcribe-preview',
+    id: 'fish-audio/transcribe-1',
+    name: 'Fish Audio Transcribe-1',
+    provider: 'Fish Audio',
+    costPerMin: 0.0038,
+    latencyGrade: 'fast',
+    accuracyGrade: 'very-high',
+    description: 'Raw verbatim multilingual speech recognition with broad language support.',
+  },
+  {
+    id: 'google/gemini-3.5-transcribe',
     name: 'Google Gemini 3.5 Transcribe',
     provider: 'Google',
     costPerMin: 0.0,
     latencyGrade: 'fast',
     accuracyGrade: 'state-of-the-art',
-    description: 'High-precision smart transcription with filler word removal and 85+ language support.',
+    description: 'High-precision speech transcription with filler word removal and 85+ language support.',
   },
   {
     id: 'groq/whisper-large-v3-turbo',
@@ -82,14 +82,13 @@ export function getSortedModels(defaultModelId?: string): ModelInfo[] {
 }
 
 const PRICE_PER_MIN: Record<string, number> = {
-  'groq/whisper-large-v3-turbo': 0.00067,
-  'google/gemini-3.5-transcribe-preview': 0.0,
-  'google/gemini-3.5-transcribe': 0.0,
-  'google/gemini-2.5-flash': 0.0,
   'openai/gpt-transcribe': 0.0045,
+  'fish-audio/transcribe-1': 0.0038,
+  'google/gemini-3.5-transcribe': 0.0,
+  'google/gemini-3.5-transcribe-preview': 0.0,
+  'groq/whisper-large-v3-turbo': 0.00067,
   'deepgram/nova-3': 0.0043,
   'nvidia/parakeet-tdt-0.6b-v3': 0.0035,
-  'fish-audio/transcribe-1': 0.0038,
 }
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -154,66 +153,89 @@ export async function transcribeAudio(
       throw new TypeError('Invalid audio source provided to transcribeAudio')
     }
 
-    // Handler for Google Gemini via Google AI Studio API with ultra-fast model fallback
+    // Handler for Google Gemini 3.5 Transcribe
     if (isGeminiModel) {
       const base64Data = await blobToBase64(audioBlob)
       const mimeType = audioBlob.type || 'audio/webm'
-      const candidateModels = [
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-2.5-flash',
-      ]
+      const actualModel = 'gemini-3.5-transcribe'
 
       let textOutput = ''
       let lastError = ''
 
-      for (const model of candidateModels) {
+      // Attempt 1: generateContent with gemini-3.5-transcribe
+      try {
+        const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${effectiveApiKey}`
+        const response = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType,
+                      data: base64Data,
+                    },
+                  },
+                  {
+                    text: 'Transcribe the spoken words verbatim. Return ONLY the plain transcription text with punctuation. Do not add explanations, conversational comments, or code blocks.',
+                  },
+                ],
+              },
+            ],
+          }),
+        })
+
+        if (response.ok) {
+          const json = await response.json()
+          textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+        }
+        else {
+          const errText = await response.text()
+          try {
+            const errJson = JSON.parse(errText)
+            lastError = errJson.error?.message || `HTTP ${response.status}: ${response.statusText}`
+          }
+          catch {
+            lastError = `HTTP ${response.status}: ${response.statusText}`
+          }
+        }
+      }
+      catch (e: any) {
+        lastError = e?.message || String(e)
+      }
+
+      // Attempt 2: Interactions API for gemini-3.5-transcribe
+      if (!textOutput) {
         try {
-          const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveApiKey}`
-          const response = await fetch(endpointUrl, {
+          const interactionsUrl = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${effectiveApiKey}`
+          const interResponse = await fetch(interactionsUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'x-goog-api-key': effectiveApiKey,
             },
             body: JSON.stringify({
-              contents: [
+              model: actualModel,
+              input: [
                 {
-                  parts: [
-                    {
-                      inlineData: {
-                        mimeType,
-                        data: base64Data,
-                      },
-                    },
-                    {
-                      text: 'Transcribe the spoken words verbatim. Return ONLY the plain transcription text with punctuation. Do not add explanations, conversational comments, or code blocks.',
-                    },
-                  ],
+                  type: 'audio',
+                  mime_type: mimeType,
+                  data: base64Data,
                 },
               ],
             }),
           })
 
-          if (response.ok) {
-            const json = await response.json()
-            textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
-            if (textOutput)
-              break
-          }
-          else {
-            const errText = await response.text()
-            try {
-              const errJson = JSON.parse(errText)
-              lastError = errJson.error?.message || `HTTP ${response.status}: ${response.statusText}`
-            }
-            catch {
-              lastError = `HTTP ${response.status}: ${response.statusText}`
-            }
+          if (interResponse.ok) {
+            const interJson = await interResponse.json()
+            textOutput = interJson.output_text || interJson.outputs?.[0]?.text || interJson.text || ''
           }
         }
-        catch (e: any) {
-          lastError = e?.message || String(e)
-        }
+        catch {}
       }
 
       if (!textOutput) {
