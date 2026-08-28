@@ -10,6 +10,18 @@ By [Awais Alwaisy](https://alwaisy.dev) &nbsp;|&nbsp; [Maina Voice](https://main
 
 ---
 
+## Launch
+
+Maina Voice publicly launched on **August 12, 2026**.
+
+### Directory listings
+
+| Directory | Status | Submitted |
+| --- | --- | --- |
+| [WhatAreYouBuilding.ai](https://whatareyoubuilding.ai/product/jbsvccMXkLu7hYPXc10F) | Live | Aug 28, 2026 |
+| [TinyLaunch](https://www.tinylaunch.com/launch/20717) | Scheduled for Sep 28, 2026 | Aug 28, 2026 |
+| SubmitForBacklinks | In review, launch week of Oct 5, 2026 | Aug 28, 2026 |
+
 ## What it does
 
 **Record mode**: Pick a speech model, record your voice, and get a transcript. Re-transcribe the same recording with another model whenever you want to compare outputs without speaking twice.
