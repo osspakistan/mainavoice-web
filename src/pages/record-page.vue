@@ -113,7 +113,7 @@ async function toggleRecording() {
         const duration = Math.max(recordSeconds.value, 1)
 
         const result = await transcribeAudio(
-          audioUrl,
+          audioBlob,
           store.selectedModel,
           store.openRouterApiKey,
           duration,
@@ -172,7 +172,7 @@ async function handleFileChange(event: Event) {
   try {
     const fileUrl = URL.createObjectURL(file)
     const result = await transcribeAudio(
-      fileUrl,
+      file,
       store.selectedModel,
       store.openRouterApiKey,
       60,

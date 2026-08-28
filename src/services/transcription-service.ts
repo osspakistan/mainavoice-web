@@ -84,6 +84,8 @@ export function getSortedModels(defaultModelId?: string): ModelInfo[] {
 const PRICE_PER_MIN: Record<string, number> = {
   'groq/whisper-large-v3-turbo': 0.00067,
   'google/gemini-3.5-transcribe-preview': 0.0,
+  'google/gemini-3.5-transcribe': 0.0,
+  'google/gemini-2.5-flash': 0.0,
   'openai/gpt-transcribe': 0.0045,
   'deepgram/nova-3': 0.0043,
   'nvidia/parakeet-tdt-0.6b-v3': 0.0035,
@@ -166,7 +168,7 @@ async function blobToBase64(blob: Blob): Promise<string> {
 }
 
 export async function transcribeAudio(
-  audioFilePath: string,
+  audioSource: Blob | string,
   modelId: string,
   openRouterApiKey: string,
   durationSeconds: number = 5,
@@ -203,63 +205,85 @@ export async function transcribeAudio(
   try {
     let audioBlob: Blob
 
-    if (audioFilePath.startsWith('blob:') || audioFilePath.startsWith('http')) {
-      const res = await fetch(audioFilePath)
+    if (audioSource instanceof Blob) {
+      audioBlob = audioSource
+    }
+    else if (typeof audioSource === 'string') {
+      const res = await fetch(audioSource)
       audioBlob = await res.blob()
     }
     else {
-      const res = await fetch(audioFilePath)
-      audioBlob = await res.blob()
+      throw new TypeError('Invalid audio source provided to transcribeAudio')
     }
 
     // Convert any browser recording (WebM/Ogg/etc.) to a clean 16-bit PCM WAV blob for 100% provider compatibility
     audioBlob = await audioBlobToWavBlob(audioBlob)
 
-    // Handler for Google Gemini 3.5 Transcribe via Google AI Studio API
+    // Handler for Google Gemini via Google AI Studio API with automatic model fallback
     if (isGeminiModel) {
       const base64Data = await blobToBase64(audioBlob)
-      const actualGeminiModel = modelId.replace('google/', '')
-      const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${actualGeminiModel}:generateContent?key=${effectiveApiKey}`
+      const candidateModels = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+      ]
 
-      const response = await fetch(endpointUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
+      let textOutput = ''
+      let lastError = ''
+
+      for (const model of candidateModels) {
+        try {
+          const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveApiKey}`
+          const response = await fetch(endpointUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [
                 {
-                  inlineData: {
-                    mimeType: 'audio/wav',
-                    data: base64Data,
-                  },
-                },
-                {
-                  text: 'Generate an accurate, punctuated transcription of this audio. Output ONLY the raw transcript text without any conversational preamble or markdown codeblocks.',
+                  parts: [
+                    {
+                      inlineData: {
+                        mimeType: 'audio/wav',
+                        data: base64Data,
+                      },
+                    },
+                    {
+                      text: 'Generate an accurate, verbatim, punctuated transcription of this audio. Output ONLY the raw transcript text without any conversational preamble or markdown codeblocks.',
+                    },
+                  ],
                 },
               ],
-            },
-          ],
-        }),
-      })
+            }),
+          })
 
-      if (!response.ok) {
-        const errText = await response.text()
-        let errorMsg = `Google Gemini HTTP ${response.status}: ${response.statusText}`
-        try {
-          const errJson = JSON.parse(errText)
-          if (errJson.error?.message) {
-            errorMsg = `Google Gemini Error: ${errJson.error.message}`
+          if (response.ok) {
+            const json = await response.json()
+            textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+            if (textOutput)
+              break
+          }
+          else {
+            const errText = await response.text()
+            try {
+              const errJson = JSON.parse(errText)
+              lastError = errJson.error?.message || `HTTP ${response.status}: ${response.statusText}`
+            }
+            catch {
+              lastError = `HTTP ${response.status}: ${response.statusText}`
+            }
           }
         }
-        catch {}
-        throw new Error(errorMsg)
+        catch (e: any) {
+          lastError = e?.message || String(e)
+        }
       }
 
-      const json = await response.json()
-      let textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text || 'Transcription completed, but no text output was returned.'
+      if (!textOutput) {
+        throw new Error(lastError || 'No transcript text was returned by Google Gemini API.')
+      }
+
       textOutput = autoTransliterateIfUrduRegion(textOutput)
 
       const latencyMs = Date.now() - startTime

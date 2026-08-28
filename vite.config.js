@@ -77,8 +77,8 @@ function assetLoadingOptimizations() {
             for (var _c = 0, cssFiles_1 = cssFiles; _c < cssFiles_1.length; _c++) {
                 var file = cssFiles_1[_c];
                 var blocking = new RegExp("<link[^>]*rel=\"stylesheet\"[^>]*href=\"/".concat(file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "\"[^>]*>"));
-                out = out.replace(blocking, "<link rel=\"stylesheet\" crossorigin href=\"/".concat(file, "\" media=\"print\" onload=\"this.media='all';this.onload=null\">")
-                    + "<noscript><link rel=\"stylesheet\" crossorigin href=\"/".concat(file, "\"></noscript>"));
+                out = out.replace(blocking, "<link rel=\"stylesheet\" href=\"/".concat(file, "\" media=\"print\" onload=\"this.media='all';this.onload=null\">")
+                    + "<noscript><link rel=\"stylesheet\" href=\"/".concat(file, "\"></noscript>"));
             }
             var hints = __spreadArray(__spreadArray([], cssFiles.map(function (f) { return "<link rel=\"preload\" as=\"style\" href=\"/".concat(f, "\">"); }), true), jsEntries.map(function (f) { return "<link rel=\"modulepreload\" href=\"/".concat(f, "\">"); }), true);
             if (hints.length > 0)

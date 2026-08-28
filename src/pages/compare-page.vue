@@ -129,42 +129,46 @@ async function toggleBenchmarkRecording() {
       mediaRecorder.onstop = async () => {
         const mimeType = mediaRecorder?.mimeType || 'audio/webm'
         const audioBlob = new Blob(audioChunks, { type: mimeType })
-        const audioUrl = URL.createObjectURL(audioBlob)
         const duration = Math.max(recordSeconds.value, 1)
 
-        // Run transcription in parallel for active slots
+        // Initialize empty slot results
+        results.value = [null, null, null, null, null]
+        isProcessing.value = true
+
+        // Stream transcription in parallel for active slots
         const activePromises = []
         for (let i = 0; i < modelCount.value; i++) {
           const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
-          activePromises.push(
-            transcribeAudio(audioUrl, modelId, store.openRouterApiKey, duration, store.groqApiKey, store.geminiApiKey),
-          )
-        }
+          const slotTask = (async (slotIndex: number) => {
+            const res = await transcribeAudio(
+              audioBlob,
+              modelId,
+              store.openRouterApiKey,
+              duration,
+              store.groqApiKey,
+              store.geminiApiKey,
+            )
 
-        const resList = await Promise.all(activePromises)
-
-        if (store.autoTranslateCompare) {
-          for (let i = 0; i < resList.length; i++) {
-            const res = resList[i]
-            if (res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
+            if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
               try {
                 res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
-                activeTabs.value[i] = 'english'
+                activeTabs.value[slotIndex] = 'english'
               }
               catch {}
             }
-          }
+
+            // Immediately display this slot's result as soon as it arrives!
+            results.value[slotIndex] = res
+            return res
+          })(i)
+
+          activePromises.push(slotTask)
         }
 
-        // Reset results and assign active outputs
-        const newResults: (TranscriptionVersion | null)[] = [null, null, null, null, null]
-        for (let i = 0; i < resList.length; i++) {
-          newResults[i] = resList[i] ?? null
-        }
-        results.value = newResults
+        const resList = await Promise.all(activePromises)
         isProcessing.value = false
 
-        const activeVersions = newResults.filter((r): r is TranscriptionVersion => r !== null)
+        const activeVersions = resList.filter((r): r is TranscriptionVersion => r !== null && r !== undefined)
         if (activeVersions.length > 0) {
           await store.saveComparisonSuite(audioBlob, activeVersions, fastestIndex.value)
         }
@@ -201,37 +205,37 @@ async function handleFileChange(event: Event) {
   results.value = [null, null, null, null, null]
 
   try {
-    const fileUrl = URL.createObjectURL(file)
     const activePromises = []
     for (let i = 0; i < modelCount.value; i++) {
       const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
-      activePromises.push(
-        transcribeAudio(fileUrl, modelId, store.openRouterApiKey, 60, store.groqApiKey, store.geminiApiKey),
-      )
+      const slotTask = (async (slotIndex: number) => {
+        const res = await transcribeAudio(
+          file,
+          modelId,
+          store.openRouterApiKey,
+          60,
+          store.groqApiKey,
+          store.geminiApiKey,
+        )
+
+        if (store.autoTranslateCompare && res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
+          try {
+            res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
+            activeTabs.value[slotIndex] = 'english'
+          }
+          catch {}
+        }
+
+        results.value[slotIndex] = res
+        return res
+      })(i)
+
+      activePromises.push(slotTask)
     }
 
     const resList = await Promise.all(activePromises)
 
-    if (store.autoTranslateCompare) {
-      for (let i = 0; i < resList.length; i++) {
-        const res = resList[i]
-        if (res && res.text && !res.text.startsWith('Transcription Error') && !res.text.startsWith('OpenRouter Error') && !res.text.startsWith('Please set')) {
-          try {
-            res.translatedText = await translateToEnglish(res.text, store.openRouterApiKey)
-            activeTabs.value[i] = 'english'
-          }
-          catch {}
-        }
-      }
-    }
-
-    const newResults: (TranscriptionVersion | null)[] = [null, null, null, null, null]
-    for (let i = 0; i < resList.length; i++) {
-      newResults[i] = resList[i] ?? null
-    }
-    results.value = newResults
-
-    const activeVersions = newResults.filter((r): r is TranscriptionVersion => r !== null)
+    const activeVersions = resList.filter((r): r is TranscriptionVersion => r !== null && r !== undefined)
     if (activeVersions.length > 0) {
       await store.saveComparisonSuite(file, activeVersions, fastestIndex.value)
     }
