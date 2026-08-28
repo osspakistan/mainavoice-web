@@ -33,6 +33,15 @@ export const ALL_MODELS: ModelInfo[] = [
     description: 'High-accuracy whisper & multimodal transcription engine.',
   },
   {
+    id: 'google/gemini-3.5-transcribe-preview',
+    name: 'Google Gemini 3.5 Transcribe',
+    provider: 'Google',
+    costPerMin: 0.0,
+    latencyGrade: 'fast',
+    accuracyGrade: 'state-of-the-art',
+    description: 'High-precision smart transcription with filler word removal and 85+ language support.',
+  },
+  {
     id: 'groq/whisper-large-v3-turbo',
     name: 'Groq Whisper Large v3 Turbo',
     provider: 'Groq',
@@ -64,6 +73,7 @@ export const ALL_MODELS: ModelInfo[] = [
 
 const PRICE_PER_MIN: Record<string, number> = {
   'groq/whisper-large-v3-turbo': 0.00067,
+  'google/gemini-3.5-transcribe-preview': 0.0,
   'openai/gpt-transcribe': 0.0045,
   'deepgram/nova-3': 0.0043,
   'nvidia/parakeet-tdt-0.6b-v3': 0.0035,
@@ -134,20 +144,41 @@ async function audioBlobToWavBlob(blob: Blob): Promise<Blob> {
   }
 }
 
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer()
+  let binary = ''
+  const bytes = new Uint8Array(buffer)
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i] ?? 0)
+  }
+  return window.btoa(binary)
+}
+
 export async function transcribeAudio(
   audioFilePath: string,
   modelId: string,
   openRouterApiKey: string,
   durationSeconds: number = 5,
   groqApiKey?: string,
+  geminiApiKey?: string,
 ): Promise<TranscriptionVersion> {
   const startTime = Date.now()
 
   const isGroqModel = modelId.startsWith('groq/')
-  const effectiveApiKey = isGroqModel ? (groqApiKey || openRouterApiKey) : openRouterApiKey
+  const isGeminiModel = modelId.startsWith('google/')
+  const effectiveApiKey = isGroqModel
+    ? (groqApiKey || openRouterApiKey)
+    : isGeminiModel
+      ? (geminiApiKey || openRouterApiKey)
+      : openRouterApiKey
 
   if (!effectiveApiKey || effectiveApiKey.trim() === '') {
-    const keyName = isGroqModel ? 'Groq API Key (or OpenRouter Key)' : 'OpenRouter API Key'
+    const keyName = isGroqModel
+      ? 'Groq API Key (or OpenRouter Key)'
+      : isGeminiModel
+        ? 'Google Gemini API Key'
+        : 'OpenRouter API Key'
     return {
       versionNumber: 1,
       engineName: modelId,
@@ -173,6 +204,68 @@ export async function transcribeAudio(
 
     // Convert any browser recording (WebM/Ogg/etc.) to a clean 16-bit PCM WAV blob for 100% provider compatibility
     audioBlob = await audioBlobToWavBlob(audioBlob)
+
+    // Handler for Google Gemini 3.5 Transcribe via Google AI Studio API
+    if (isGeminiModel) {
+      const base64Data = await blobToBase64(audioBlob)
+      const actualGeminiModel = modelId.replace('google/', '')
+      const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${actualGeminiModel}:generateContent?key=${effectiveApiKey}`
+
+      const response = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: 'audio/wav',
+                    data: base64Data,
+                  },
+                },
+                {
+                  text: 'Generate an accurate, punctuated transcription of this audio. Output ONLY the raw transcript text without any conversational preamble or markdown codeblocks.',
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        const errText = await response.text()
+        let errorMsg = `Google Gemini HTTP ${response.status}: ${response.statusText}`
+        try {
+          const errJson = JSON.parse(errText)
+          if (errJson.error?.message) {
+            errorMsg = `Google Gemini Error: ${errJson.error.message}`
+          }
+        }
+        catch {}
+        throw new Error(errorMsg)
+      }
+
+      const json = await response.json()
+      let textOutput = json.candidates?.[0]?.content?.parts?.[0]?.text || 'Transcription completed, but no text output was returned.'
+      textOutput = autoTransliterateIfUrduRegion(textOutput)
+
+      const latencyMs = Date.now() - startTime
+      const wordCount = textOutput.trim().split(/\s+/).filter(Boolean).length
+      const costEstimate = 0.0
+
+      return {
+        versionNumber: 1,
+        engineName: modelId,
+        text: textOutput,
+        latencyMs,
+        wordCount,
+        costEstimate,
+        timestamp: new Date().toISOString(),
+      }
+    }
 
     const form = new FormData()
     form.append('file', audioBlob, 'recording.wav')

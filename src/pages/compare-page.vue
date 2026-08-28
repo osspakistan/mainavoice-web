@@ -136,7 +136,7 @@ async function toggleBenchmarkRecording() {
         for (let i = 0; i < modelCount.value; i++) {
           const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
           activePromises.push(
-            transcribeAudio(audioUrl, modelId, store.openRouterApiKey, duration, store.groqApiKey),
+            transcribeAudio(audioUrl, modelId, store.openRouterApiKey, duration, store.groqApiKey, store.geminiApiKey),
           )
         }
 
@@ -205,7 +205,7 @@ async function handleFileChange(event: Event) {
     for (let i = 0; i < modelCount.value; i++) {
       const modelId = selectedModels.value[i] || 'openai/gpt-transcribe'
       activePromises.push(
-        transcribeAudio(fileUrl, modelId, store.openRouterApiKey, 60, store.groqApiKey),
+        transcribeAudio(fileUrl, modelId, store.openRouterApiKey, 60, store.groqApiKey, store.geminiApiKey),
       )
     }
 
