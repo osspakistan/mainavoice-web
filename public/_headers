@@ -1,8 +1,8 @@
 # Cloudflare Pages headers — perf + security + agent discovery.
 
-# HTML and other pages: let the edge cache but keep them fresh.
+# HTML and other pages: always deliver fresh entrypoint without edge stale caching.
 /*
-  Cache-Control: public, max-age=0, s-maxage=600, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN

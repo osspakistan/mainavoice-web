@@ -119,7 +119,7 @@ export async function transcribeAudio(
   const effectiveApiKey = isGroqModel
     ? (groqApiKey || openRouterApiKey)
     : isGeminiModel
-      ? (geminiApiKey || openRouterApiKey)
+      ? geminiApiKey
       : openRouterApiKey
 
   if (!effectiveApiKey || effectiveApiKey.trim() === '') {
