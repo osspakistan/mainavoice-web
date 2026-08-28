@@ -15,10 +15,6 @@ const NEW_FEATURE_URL = 'https://github.com/alwaisy/mainavoice-web/issues/new?la
         <div class="flex items-center gap-3">
           <!-- SubmitForBacklinks Verified Badge -->
           <a href="https://submitforbacklinks.com/product/maina-voice?utm_source=badge&utm_medium=embed&utm_campaign=maina-voice&ref=submitforbacklinks" target="_blank" rel="noopener" data-s4b-token="yAF_V67a1bzbr6XO8vvLyVP3" data-s4b-theme="dark" class="inline-block transition-opacity hover:opacity-90"><img src="https://submitforbacklinks.com/api/badge/yAF_V67a1bzbr6XO8vvLyVP3.svg?variant=verified&theme=dark" alt="Maina Voice — Verified on SubmitForBacklinks" width="220" height="48" loading="lazy" class="h-9 w-auto"></a>
-          <!-- WhatAreYouBuilding listing (verified backlink leaderboard) -->
-          <a href="https://whatareyoubuilding.ai/product/jbsvccMXkLu7hYPXc10F" target="_blank" rel="noopener" class="inline-flex items-center h-9 px-3 rounded-md border border-border/60 text-[11px] text-muted-foreground hover:text-foreground hover:border-border transition">
-            Listed on WhatAreYouBuilding.ai
-          </a>
         </div>
 
         <div class="text-[11px] text-muted-foreground flex items-center gap-2">
