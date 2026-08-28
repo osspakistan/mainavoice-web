@@ -14,33 +14,7 @@ const NEW_FEATURE_URL = 'https://github.com/alwaisy/mainavoice-web/issues/new?la
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-border/60 pb-3">
         <div class="flex items-center gap-3">
           <!-- SubmitForBacklinks Verified Badge -->
-          <a
-            href="https://submitforbacklinks.com/product/maina-voice?utm_source=badge&utm_medium=embed&utm_campaign=maina-voice&ref=submitforbacklinks"
-            target="_blank"
-            rel="noopener"
-            data-s4b-token="yAF_V67a1bzbr6XO8vvLyVP3"
-            data-s4b-theme="dark"
-            class="inline-block transition-opacity hover:opacity-90"
-          >
-            <!-- Dark mode image -->
-            <img
-              src="https://submitforbacklinks.com/api/badge/yAF_V67a1bzbr6XO8vvLyVP3.svg?variant=verified&theme=dark"
-              alt="Maina Voice — Verified on SubmitForBacklinks"
-              width="220"
-              height="48"
-              loading="lazy"
-              class="hidden dark:block h-9 w-auto"
-            >
-            <!-- Light mode image -->
-            <img
-              src="https://submitforbacklinks.com/api/badge/yAF_V67a1bzbr6XO8vvLyVP3.svg?variant=verified&theme=light"
-              alt="Maina Voice — Verified on SubmitForBacklinks"
-              width="220"
-              height="48"
-              loading="lazy"
-              class="block dark:hidden h-9 w-auto"
-            >
-          </a>
+          <a href="https://submitforbacklinks.com/product/maina-voice?utm_source=badge&utm_medium=embed&utm_campaign=maina-voice&ref=submitforbacklinks" target="_blank" rel="noopener" data-s4b-token="yAF_V67a1bzbr6XO8vvLyVP3" data-s4b-theme="dark" class="inline-block transition-opacity hover:opacity-90"><img src="https://submitforbacklinks.com/api/badge/yAF_V67a1bzbr6XO8vvLyVP3.svg?variant=verified&theme=dark" alt="Maina Voice — Verified on SubmitForBacklinks" width="220" height="48" loading="lazy" class="h-9 w-auto"></a>
         </div>
 
         <div class="text-[11px] text-muted-foreground flex items-center gap-2">
