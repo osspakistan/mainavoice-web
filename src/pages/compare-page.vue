@@ -16,8 +16,8 @@ const modelCount = ref<2 | 3 | 4 | 5>(5)
 
 // Selected models for up to 5 comparison workbenches (initialized with sorted models)
 const selectedModels = ref<string[]>([
-  sortedModels.value[0]?.id || 'openai/gpt-transcribe',
-  sortedModels.value[1]?.id || 'fish-audio/transcribe-1',
+  sortedModels.value[0]?.id || 'fish-audio/transcribe-1',
+  sortedModels.value[1]?.id || 'openai/gpt-transcribe',
   sortedModels.value[2]?.id || 'google/gemini-3.5-transcribe',
   sortedModels.value[3]?.id || 'groq/whisper-large-v3-turbo',
   sortedModels.value[4]?.id || 'deepgram/nova-3',

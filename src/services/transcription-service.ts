@@ -14,16 +14,6 @@ export interface ModelInfo {
 
 export const ALL_MODELS: ModelInfo[] = [
   {
-    id: 'openai/gpt-transcribe',
-    name: 'OpenAI GPT-Transcribe',
-    provider: 'OpenAI',
-    costPerMin: 0.0045,
-    latencyGrade: 'fast',
-    accuracyGrade: 'state-of-the-art',
-    description: 'High-accuracy whisper & multimodal transcription engine with intelligent paragraphing.',
-    badge: 'Polished & Paragraphing',
-  },
-  {
     id: 'fish-audio/transcribe-1',
     name: 'Fish Audio Transcribe-1',
     provider: 'Fish Audio',
@@ -31,6 +21,16 @@ export const ALL_MODELS: ModelInfo[] = [
     latencyGrade: 'fast',
     accuracyGrade: 'very-high',
     description: 'Raw verbatim multilingual speech recognition with broad language support.',
+    badge: 'Best Accuracy & Winner',
+  },
+  {
+    id: 'openai/gpt-transcribe',
+    name: 'OpenAI GPT-Transcribe',
+    provider: 'OpenAI',
+    costPerMin: 0.0045,
+    latencyGrade: 'fast',
+    accuracyGrade: 'state-of-the-art',
+    description: 'High-accuracy whisper & multimodal transcription engine.',
   },
   {
     id: 'google/gemini-3.5-transcribe',

@@ -55,7 +55,7 @@ export const useMainaStore = defineStore('maina-store', () => {
   const openRouterApiKey = ref<string>(getLocalStr('openRouterApiKey', ''))
   const groqApiKey = ref<string>(getLocalStr('groqApiKey', ''))
   const geminiApiKey = ref<string>(getLocalStr('geminiApiKey', ''))
-  const selectedModel = ref<string>(getLocalStr('selectedModel', 'openai/gpt-transcribe'))
+  const selectedModel = ref<string>(getLocalStr('selectedModel', 'fish-audio/transcribe-1'))
   const themeMode = ref<ThemeMode>(getLocalStr('themeMode', 'light') as ThemeMode)
   const history = ref<RecordingHistoryItem[]>([])
   const isInitialized = ref(false)
