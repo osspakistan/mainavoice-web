@@ -37,8 +37,8 @@ function assetLoadingOptimizations(): Plugin {
         const blocking = new RegExp(`<link[^>]*rel="stylesheet"[^>]*href="/${file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`)
         out = out.replace(
           blocking,
-          `<link rel="stylesheet" crossorigin href="/${file}" media="print" onload="this.media='all';this.onload=null">`
-          + `<noscript><link rel="stylesheet" crossorigin href="/${file}"></noscript>`,
+          `<link rel="stylesheet" href="/${file}" media="print" onload="this.media='all';this.onload=null">`
+          + `<noscript><link rel="stylesheet" href="/${file}"></noscript>`,
         )
       }
 

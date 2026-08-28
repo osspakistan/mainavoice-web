@@ -207,6 +207,10 @@ export async function onRequest(context) {
 
   const headers = new Headers(response.headers)
   headers.set('Vary', 'Accept, Accept-Encoding')
+  headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data: https: blob:; media-src 'self' blob: data:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' blob: data: https://openrouter.ai https://api.groq.com https://generativelanguage.googleapis.com https://cloudflareinsights.com https://*.cloudflareinsights.com https://api.openai.com https://api.deepgram.com https://api.fish.audio; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+  )
   return new Response(html, {
     status: is404 ? 404 : response.status,
     statusText: response.statusText,
