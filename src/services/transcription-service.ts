@@ -92,79 +92,17 @@ const PRICE_PER_MIN: Record<string, number> = {
   'fish-audio/transcribe-1': 0.0038,
 }
 
-async function audioBlobToWavBlob(blob: Blob): Promise<Blob> {
-  try {
-    const arrayBuffer = await blob.arrayBuffer()
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
-    if (!AudioCtx)
-      return blob
-    const audioContext = new AudioCtx()
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-
-    const sampleRate = audioBuffer.sampleRate
-    const numChannels = audioBuffer.numberOfChannels
-
-    let channelData: Float32Array
-    if (numChannels === 1) {
-      channelData = audioBuffer.getChannelData(0)
-    }
-    else {
-      const left = audioBuffer.getChannelData(0)
-      const right = audioBuffer.getChannelData(1)
-      channelData = new Float32Array(left.length)
-      for (let i = 0; i < left.length; i++) {
-        channelData[i] = 0.5 * ((left[i] ?? 0) + (right[i] ?? 0))
-      }
-    }
-
-    const wavBuffer = new ArrayBuffer(44 + channelData.length * 2)
-    const view = new DataView(wavBuffer)
-
-    const writeString = (offset: number, str: string) => {
-      for (let i = 0; i < str.length; i++) {
-        view.setUint8(offset + i, str.charCodeAt(i))
-      }
-    }
-
-    writeString(0, 'RIFF')
-    view.setUint32(4, 36 + channelData.length * 2, true)
-    writeString(8, 'WAVE')
-    writeString(12, 'fmt ')
-    view.setUint32(16, 16, true) // Subchunk1Size
-    view.setUint16(20, 1, true) // AudioFormat (PCM)
-    view.setUint16(22, 1, true) // NumChannels (1 = Mono)
-    view.setUint32(24, sampleRate, true) // SampleRate
-    view.setUint32(28, sampleRate * 2, true) // ByteRate
-    view.setUint16(32, 2, true) // BlockAlign
-    view.setUint16(34, 16, true) // BitsPerSample
-    writeString(36, 'data')
-    view.setUint32(40, channelData.length * 2, true)
-
-    let offset = 44
-    for (let i = 0; i < channelData.length; i++, offset += 2) {
-      const val = channelData[i] ?? 0
-      const s = Math.max(-1, Math.min(1, val))
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
-    }
-
-    await audioContext.close()
-    return new Blob([wavBuffer], { type: 'audio/wav' })
-  }
-  catch (e) {
-    console.warn('WAV conversion fallback to original blob:', e)
-    return blob
-  }
-}
-
 async function blobToBase64(blob: Blob): Promise<string> {
-  const buffer = await blob.arrayBuffer()
-  let binary = ''
-  const bytes = new Uint8Array(buffer)
-  const len = bytes.byteLength
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i] ?? 0)
-  }
-  return window.btoa(binary)
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = (reader.result as string) || ''
+      const base64 = result.includes(',') ? (result.split(',')[1] ?? '') : result
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 export async function transcribeAudio(
@@ -216,16 +154,14 @@ export async function transcribeAudio(
       throw new TypeError('Invalid audio source provided to transcribeAudio')
     }
 
-    // Convert any browser recording (WebM/Ogg/etc.) to a clean 16-bit PCM WAV blob for 100% provider compatibility
-    audioBlob = await audioBlobToWavBlob(audioBlob)
-
-    // Handler for Google Gemini via Google AI Studio API with automatic model fallback
+    // Handler for Google Gemini via Google AI Studio API with ultra-fast model fallback
     if (isGeminiModel) {
       const base64Data = await blobToBase64(audioBlob)
+      const mimeType = audioBlob.type || 'audio/webm'
       const candidateModels = [
-        'gemini-2.5-flash',
         'gemini-2.0-flash',
         'gemini-1.5-flash',
+        'gemini-2.5-flash',
       ]
 
       let textOutput = ''
@@ -245,12 +181,12 @@ export async function transcribeAudio(
                   parts: [
                     {
                       inlineData: {
-                        mimeType: 'audio/wav',
+                        mimeType,
                         data: base64Data,
                       },
                     },
                     {
-                      text: 'Generate an accurate, verbatim, punctuated transcription of this audio. Output ONLY the raw transcript text without any conversational preamble or markdown codeblocks.',
+                      text: 'Transcribe the spoken words verbatim. Return ONLY the plain transcription text with punctuation. Do not add explanations, conversational comments, or code blocks.',
                     },
                   ],
                 },
@@ -302,7 +238,9 @@ export async function transcribeAudio(
     }
 
     const form = new FormData()
-    form.append('file', audioBlob, 'recording.wav')
+    const rawType = audioBlob.type || ''
+    const ext = rawType.includes('webm') ? 'webm' : rawType.includes('ogg') ? 'ogg' : rawType.includes('mp4') ? 'mp4' : 'wav'
+    form.append('file', audioBlob, `recording.${ext}`)
 
     let endpointUrl = 'https://openrouter.ai/api/v1/audio/transcriptions'
     const headers: Record<string, string> = {
