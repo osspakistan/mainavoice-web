@@ -1,4 +1,4 @@
-const ABOUT_TITLE = 'About Maina Voice — Local-first Voice Transcription'
+const ABOUT_TITLE = 'About Maina Voice // Local-first Voice Transcription'
 const ABOUT_DESC = 'Maina Voice is a local-first, browser-based speech-to-text workbench. Everything stays in your IndexedDB; audio goes directly from your browser to OpenRouter or Groq.'
 const ABOUT_HTML = `
 <div class="max-w-[714px] mx-auto space-y-6 animate-in fade-in-50 duration-300">
@@ -42,7 +42,7 @@ const ABOUT_HTML = `
 </div>
 `
 
-const PRIVACY_TITLE = 'Privacy Policy — Maina Voice'
+const PRIVACY_TITLE = 'Privacy Policy // Maina Voice'
 const PRIVACY_DESC = 'Maina Voice keeps your voice and transcripts under your control. There is no account, no analytics beacon and no first-party backend that stores your data.'
 const PRIVACY_HTML = `
 <div class="max-w-[714px] mx-auto space-y-6 animate-in fade-in-50 duration-300">
@@ -85,7 +85,7 @@ const PRIVACY_HTML = `
 </div>
 `
 
-const CONTACT_TITLE = 'Contact — Maina Voice'
+const CONTACT_TITLE = 'Contact // Maina Voice'
 const CONTACT_DESC = 'Have a question, bug report or feature idea? Reach the maintainers through GitHub issues or email.'
 const CONTACT_HTML = `
 <div class="max-w-[714px] mx-auto space-y-6 animate-in fade-in-50 duration-300">

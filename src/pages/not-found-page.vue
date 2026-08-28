@@ -9,7 +9,7 @@ const router = useRouter()
   <div class="max-w-[714px] mx-auto py-16 animate-in fade-in-50 duration-300">
     <div class="rounded-2xl border border-border bg-card p-10 text-center shadow-xs space-y-5">
       <h1 class="text-4xl font-bold text-foreground">
-        404 — Not found
+        404 // Not found
       </h1>
 
       <p class="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
