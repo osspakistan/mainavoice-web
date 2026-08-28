@@ -5,13 +5,14 @@ import { computed, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ALL_MODELS, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
+import { getSortedModels, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
 import { autoTransliterateIfUrduRegion } from '@/services/transliteration-service'
 import { useMainaStore } from '@/stores/maina-store'
 
 const route = useRoute()
 const router = useRouter()
 const store = useMainaStore()
+const sortedModels = computed(() => getSortedModels(store.selectedModel))
 
 const itemId = computed(() => route.params.id as string)
 const item = computed<RecordingHistoryItem | undefined>(() => store.history.find((h: RecordingHistoryItem) => h.id === itemId.value))
@@ -527,14 +528,15 @@ onUnmounted(() => {
                 <SelectGroup>
                   <SelectLabel>Cloud Speech Models</SelectLabel>
                   <SelectItem
-                    v-for="model in ALL_MODELS"
+                    v-for="model in sortedModels"
                     :key="model.id"
                     :value="model.id"
                     class="text-xs"
                   >
                     <div class="flex items-center justify-between w-full gap-2">
                       <span class="font-medium">{{ model.name }}</span>
-                      <span class="text-[10px] text-muted-foreground font-mono">(${{ model.costPerMin }}/m)</span>
+                      <span v-if="store.selectedModel === model.id" class="text-[10px] text-primary font-bold">(Default)</span>
+                      <span v-else class="text-[10px] text-muted-foreground font-mono">(${{ model.costPerMin }}/m)</span>
                     </div>
                   </SelectItem>
                 </SelectGroup>

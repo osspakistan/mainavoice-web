@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
-import { ALL_MODELS } from '@/services/transcription-service'
+import { getSortedModels } from '@/services/transcription-service'
+import { useMainaStore } from '@/stores/maina-store'
 
 defineProps<{
   isOpen: boolean
@@ -10,6 +12,9 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
+
+const store = useMainaStore()
+const sortedModels = computed(() => getSortedModels(store.selectedModel))
 </script>
 
 <template>
@@ -44,15 +49,29 @@ const emit = defineEmits<{
         <!-- Models List -->
         <div class="space-y-4">
           <div
-            v-for="model in ALL_MODELS"
+            v-for="model in sortedModels"
             :key="model.id"
-            class="rounded-lg border border-border bg-background p-4 space-y-3 shadow-xs"
+            class="rounded-lg border p-4 space-y-3 shadow-xs transition-colors"
+            :class="[
+              store.selectedModel === model.id
+                ? 'border-primary/60 bg-primary/5'
+                : 'border-border bg-background',
+            ]"
           >
             <div class="flex items-center justify-between">
-              <h3 class="font-semibold text-sm text-foreground">
-                {{ model.name }}
-              </h3>
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-sm text-foreground">
+                  {{ model.name }}
+                </h3>
+                <span
+                  v-if="store.selectedModel === model.id"
+                  class="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-primary/10 text-primary border border-primary/20"
+                >
+                  Default Engine
+                </span>
+              </div>
               <span
+                v-if="model.badge"
                 class="px-2.5 py-1 text-[11px] font-bold rounded-md border bg-secondary text-secondary-foreground border-border"
               >
                 {{ model.badge }}

@@ -4,22 +4,23 @@ import { AlertCircle, Check, Copy, Mic, Square, Trophy, Upload, Zap } from 'luci
 import { computed, onUnmounted, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ALL_MODELS, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
+import { getSortedModels, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
 import { autoTransliterateIfUrduRegion } from '@/services/transliteration-service'
 import { useMainaStore } from '@/stores/maina-store'
 
 const store = useMainaStore()
+const sortedModels = computed(() => getSortedModels(store.selectedModel))
 
 // Model slots count (2, 3, 4, or 5)
 const modelCount = ref<2 | 3 | 4 | 5>(5)
 
-// Selected models for up to 5 comparison workbenches
+// Selected models for up to 5 comparison workbenches (initialized with sorted models)
 const selectedModels = ref<string[]>([
-  'fish-audio/transcribe-1',
-  'openai/gpt-transcribe',
-  'groq/whisper-large-v3-turbo',
-  'deepgram/nova-3',
-  'nvidia/parakeet-tdt-0.6b-v3',
+  sortedModels.value[0]?.id || 'fish-audio/transcribe-1',
+  sortedModels.value[1]?.id || 'openai/gpt-transcribe',
+  sortedModels.value[2]?.id || 'google/gemini-3.5-transcribe-preview',
+  sortedModels.value[3]?.id || 'groq/whisper-large-v3-turbo',
+  sortedModels.value[4]?.id || 'deepgram/nova-3',
 ])
 
 // Results array for up to 5 models
@@ -400,8 +401,12 @@ onUnmounted(() => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem v-for="m in ALL_MODELS" :key="m.id" :value="m.id" class="text-xs">
-                      {{ m.name }} (${{ m.costPerMin }}/m)
+                    <SelectItem v-for="m in sortedModels" :key="m.id" :value="m.id" class="text-xs">
+                      <div class="flex items-center justify-between w-full gap-2">
+                        <span>{{ m.name }}</span>
+                        <span v-if="store.selectedModel === m.id" class="text-[10px] text-primary font-bold">(Default)</span>
+                        <span v-else class="text-[10px] text-muted-foreground font-mono">(${{ m.costPerMin }}/m)</span>
+                      </div>
                     </SelectItem>
                   </SelectGroup>
                 </SelectContent>

@@ -71,6 +71,16 @@ export const ALL_MODELS: ModelInfo[] = [
   },
 ]
 
+export function getSortedModels(defaultModelId?: string): ModelInfo[] {
+  if (!defaultModelId)
+    return [...ALL_MODELS]
+  const defaultModel = ALL_MODELS.find(m => m.id === defaultModelId)
+  if (!defaultModel)
+    return [...ALL_MODELS]
+  const rest = ALL_MODELS.filter(m => m.id !== defaultModelId)
+  return [defaultModel, ...rest]
+}
+
 const PRICE_PER_MIN: Record<string, number> = {
   'groq/whisper-large-v3-turbo': 0.00067,
   'google/gemini-3.5-transcribe-preview': 0.0,

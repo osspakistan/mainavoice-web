@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import type { TranscriptionVersion } from '@/stores/maina-store'
 import { Check, Copy, DollarSign, Download, HelpCircle, Mic, Square, Upload, Zap } from 'lucide-vue-next'
-import { onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import ModelInfoModal from '@/components/model-info-modal.vue'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ALL_MODELS, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
+import { ALL_MODELS, getSortedModels, transcribeAudio, translateToEnglish } from '@/services/transcription-service'
 import { autoTransliterateIfUrduRegion } from '@/services/transliteration-service'
 import { useMainaStore } from '@/stores/maina-store'
 
 const store = useMainaStore()
+const sortedModels = computed(() => getSortedModels(store.selectedModel))
 const isInfoOpen = ref(false)
 const isRecording = ref(false)
 const isProcessing = ref(false)
@@ -285,7 +286,7 @@ onUnmounted(() => {
               Speech-to-Text Models
             </SelectLabel>
             <SelectItem
-              v-for="model in ALL_MODELS"
+              v-for="model in sortedModels"
               :key="model.id"
               :value="model.id"
               class="cursor-pointer text-xs"

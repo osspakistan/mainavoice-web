@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { BarChart3, Check, Clock, Coins, Database, Download, FileAudio, Globe, Key, Languages, Laptop, Layers, Moon, RotateCcw, Sparkles, Sun, Swords, Upload, Zap } from 'lucide-vue-next'
+import { BarChart3, Check, Clock, Coins, Database, Download, FileAudio, Globe, Key, Languages, Laptop, Layers, Mic, Moon, RotateCcw, Sparkles, Sun, Swords, Upload, Zap } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { exportBackupArchive, importBackupArchive, performFactoryReset } from '@/services/backup-service'
+import { getSortedModels } from '@/services/transcription-service'
 import { useMainaStore } from '@/stores/maina-store'
 
 const store = useMainaStore()
 const apiKeyInput = ref(store.openRouterApiKey)
 const groqKeyInput = ref(store.groqApiKey)
 const geminiKeyInput = ref(store.geminiApiKey)
+
+const sortedModels = computed(() => getSortedModels(store.selectedModel))
 
 const totalRecordings = computed(() => store.history.length)
 const totalVersions = computed(() => store.history.reduce((n, h) => n + h.versions.length, 0))
@@ -244,6 +247,70 @@ async function handleFactoryReset() {
           <Laptop class="w-4 h-4 text-muted-foreground" />
           <span>System Preference</span>
         </Button>
+      </div>
+    </div>
+
+    <!-- 1b. Default Speech Engine Card -->
+    <div class="rounded-xl border border-border bg-card p-6 space-y-4 shadow-xs">
+      <div class="space-y-1">
+        <h2 class="text-sm font-bold text-foreground flex items-center gap-2">
+          <Mic class="w-4 h-4 text-primary" />
+          <span>Default Speech Engine</span>
+        </h2>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          Choose which AI model is active by default for single recordings and shown first across all selectors.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <div
+          v-for="model in sortedModels"
+          :key="model.id"
+          class="flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer"
+          :class="[
+            store.selectedModel === model.id
+              ? 'border-primary/60 bg-primary/5 shadow-xs'
+              : 'border-border bg-background hover:border-border/80 hover:bg-muted/30',
+          ]"
+          @click="store.setSelectedModel(model.id)"
+        >
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-foreground">{{ model.name }}</span>
+              <span
+                v-if="store.selectedModel === model.id"
+                class="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-primary/10 text-primary border border-primary/20"
+              >
+                Default Engine
+              </span>
+              <span
+                v-else-if="model.badge"
+                class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-secondary text-secondary-foreground border border-border"
+              >
+                {{ model.badge }}
+              </span>
+            </div>
+            <p class="text-[11px] text-muted-foreground leading-relaxed line-clamp-1">
+              {{ model.description }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0 ml-3">
+            <span class="text-[11px] font-mono font-medium text-muted-foreground">
+              ${{ model.costPerMin }}/m
+            </span>
+            <div
+              class="w-4 h-4 rounded-full border flex items-center justify-center transition-colors"
+              :class="[
+                store.selectedModel === model.id
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-muted-foreground/40',
+              ]"
+            >
+              <Check v-if="store.selectedModel === model.id" class="w-3 h-3 stroke-[3]" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
